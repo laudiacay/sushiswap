@@ -15,7 +15,7 @@ interface IMigrator {
 
 contract SushiswapV2Pair is SushiswapV2ERC20 {
     using SafeMathSushiswap  for uint;
-    using UQ112x112 for uint224;
+    using SushiUQ112x112 for uint224;
 
     uint public constant MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
@@ -81,8 +81,8 @@ contract SushiswapV2Pair is SushiswapV2ERC20 {
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
             // * never overflows, and + overflow is desired
-            price0CumulativeLast += uint(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
-            price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
+            price0CumulativeLast += uint(SushiUQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
+            price1CumulativeLast += uint(SushiUQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
         }
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
@@ -97,8 +97,8 @@ contract SushiswapV2Pair is SushiswapV2ERC20 {
         uint _kLast = kLast; // gas savings
         if (feeOn) {
             if (_kLast != 0) {
-                uint rootK = Math.sqrt(uint(_reserve0).mul(_reserve1));
-                uint rootKLast = Math.sqrt(_kLast);
+                uint rootK = SushiMath.sqrt(uint(_reserve0).mul(_reserve1));
+                uint rootKLast = SushiMath.sqrt(_kLast);
                 if (rootK > rootKLast) {
                     uint numerator = totalSupply.mul(rootK.sub(rootKLast));
                     uint denominator = rootK.mul(5).add(rootKLast);
@@ -128,11 +128,11 @@ contract SushiswapV2Pair is SushiswapV2ERC20 {
                 require(liquidity > 0 && liquidity != uint256(-1), "Bad desired liquidity");
             } else {
                 require(migrator == address(0), "Must not have migrator");
-                liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
+                liquidity = SushiMath.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
                 _mint(address(0), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
             }
         } else {
-            liquidity = Math.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
+            liquidity = SushiMath.min(amount0.mul(_totalSupply) / _reserve0, amount1.mul(_totalSupply) / _reserve1);
         }
         require(liquidity > 0, 'SushiswapV2: INSUFFICIENT_LIQUIDITY_MINTED');
         _mint(to, liquidity);

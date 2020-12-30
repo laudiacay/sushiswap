@@ -70,8 +70,8 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
     ) external virtual override ensure(deadline) returns (uint amountA, uint amountB, uint liquidity) {
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
         address pair = SushiswapV2Library.pairFor(factory, tokenA, tokenB);
-        TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
-        TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
+        SushiTransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
+        SushiTransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
         liquidity = ISushiswapV2Pair(pair).mint(to);
     }
     function addLiquidityETH(
@@ -91,12 +91,12 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
             amountETHMin
         );
         address pair = SushiswapV2Library.pairFor(factory, token, WETH);
-        TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
-        IWETH(WETH).deposit{value: amountETH}();
-        assert(IWETH(WETH).transfer(pair, amountETH));
+        SushiTransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+        SushiIWETH(WETH).deposit{value: amountETH}();
+        assert(SushiIWETH(WETH).transfer(pair, amountETH));
         liquidity = ISushiswapV2Pair(pair).mint(to);
         // refund dust eth, if any
-        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
+        if (msg.value > amountETH) SushiTransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -134,9 +134,9 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
             address(this),
             deadline
         );
-        TransferHelper.safeTransfer(token, to, amountToken);
-        IWETH(WETH).withdraw(amountETH);
-        TransferHelper.safeTransferETH(to, amountETH);
+        SushiTransferHelper.safeTransfer(token, to, amountToken);
+        SushiIWETH(WETH).withdraw(amountETH);
+        SushiTransferHelper.safeTransferETH(to, amountETH);
     }
     function removeLiquidityWithPermit(
         address tokenA,
@@ -186,9 +186,9 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
             address(this),
             deadline
         );
-        TransferHelper.safeTransfer(token, to, IERC20Sushiswap(token).balanceOf(address(this)));
-        IWETH(WETH).withdraw(amountETH);
-        TransferHelper.safeTransferETH(to, amountETH);
+        SushiTransferHelper.safeTransfer(token, to, IERC20Sushiswap(token).balanceOf(address(this)));
+        SushiIWETH(WETH).withdraw(amountETH);
+        SushiTransferHelper.safeTransferETH(to, amountETH);
     }
     function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
         address token,
@@ -230,7 +230,7 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         amounts = SushiswapV2Library.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'SushiswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
@@ -244,7 +244,7 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         amounts = SushiswapV2Library.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, 'SushiswapV2Router: EXCESSIVE_INPUT_AMOUNT');
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, to);
@@ -260,8 +260,8 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         require(path[0] == WETH, 'SushiswapV2Router: INVALID_PATH');
         amounts = SushiswapV2Library.getAmountsOut(factory, msg.value, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'SushiswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
+        SushiIWETH(WETH).deposit{value: amounts[0]}();
+        assert(SushiIWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
     function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
@@ -274,12 +274,12 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         require(path[path.length - 1] == WETH, 'SushiswapV2Router: INVALID_PATH');
         amounts = SushiswapV2Library.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= amountInMax, 'SushiswapV2Router: EXCESSIVE_INPUT_AMOUNT');
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        SushiIWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        SushiTransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
     function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
         external
@@ -291,12 +291,12 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         require(path[path.length - 1] == WETH, 'SushiswapV2Router: INVALID_PATH');
         amounts = SushiswapV2Library.getAmountsOut(factory, amountIn, path);
         require(amounts[amounts.length - 1] >= amountOutMin, 'SushiswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
+        SushiIWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        SushiTransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
     function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
         external
@@ -309,11 +309,11 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         require(path[0] == WETH, 'SushiswapV2Router: INVALID_PATH');
         amounts = SushiswapV2Library.getAmountsIn(factory, amountOut, path);
         require(amounts[0] <= msg.value, 'SushiswapV2Router: EXCESSIVE_INPUT_AMOUNT');
-        IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
+        SushiIWETH(WETH).deposit{value: amounts[0]}();
+        assert(SushiIWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         // refund dust eth, if any
-        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
+        if (msg.value > amounts[0]) SushiTransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
     }
 
     // **** SWAP (supporting fee-on-transfer tokens) ****
@@ -343,7 +343,7 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         address to,
         uint deadline
     ) external virtual override ensure(deadline) {
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         uint balanceBefore = IERC20Sushiswap(path[path.length - 1]).balanceOf(to);
@@ -367,8 +367,8 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
     {
         require(path[0] == WETH, 'SushiswapV2Router: INVALID_PATH');
         uint amountIn = msg.value;
-        IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amountIn));
+        SushiIWETH(WETH).deposit{value: amountIn}();
+        assert(SushiIWETH(WETH).transfer(SushiswapV2Library.pairFor(factory, path[0], path[1]), amountIn));
         uint balanceBefore = IERC20Sushiswap(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
@@ -389,14 +389,14 @@ contract SushiswapV2Router02 is ISushiswapV2Router02 {
         ensure(deadline)
     {
         require(path[path.length - 1] == WETH, 'SushiswapV2Router: INVALID_PATH');
-        TransferHelper.safeTransferFrom(
+        SushiTransferHelper.safeTransferFrom(
             path[0], msg.sender, SushiswapV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint amountOut = IERC20Sushiswap(WETH).balanceOf(address(this));
         require(amountOut >= amountOutMin, 'SushiswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
-        IWETH(WETH).withdraw(amountOut);
-        TransferHelper.safeTransferETH(to, amountOut);
+        SushiIWETH(WETH).withdraw(amountOut);
+        SushiTransferHelper.safeTransferETH(to, amountOut);
     }
 
     // **** LIBRARY FUNCTIONS ****
