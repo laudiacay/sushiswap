@@ -1,6 +1,6 @@
 pragma solidity =0.6.12;
 
-import './libraries/SafeMath.sol';
+import './libraries/SushiSafeMath.sol';
 
 contract SushiswapV2ERC20 {
     using SafeMathSushiswap for uint;

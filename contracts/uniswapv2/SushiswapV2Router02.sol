@@ -2,12 +2,12 @@ pragma solidity =0.6.12;
 
 
 import './libraries/SushiswapV2Library.sol';
-import './libraries/SafeMath.sol';
-import './libraries/TransferHelper.sol';
+import './libraries/SushiSafeMath.sol';
+import './libraries/SushiTransferHelper.sol';
 import './interfaces/ISushiswapV2Router02.sol';
 import './interfaces/ISushiswapV2Factory.sol';
-import './interfaces/IERC20.sol';
-import './interfaces/IWETH.sol';
+import './interfaces/SushiIERC20.sol';
+import './interfaces/SushiIWETH.sol';
 
 contract SushiswapV2Router02 is ISushiswapV2Router02 {
     using SafeMathSushiswap for uint;

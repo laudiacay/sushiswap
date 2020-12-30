@@ -2,7 +2,7 @@ pragma solidity >=0.5.0;
 
 import '../interfaces/ISushiswapV2Pair.sol';
 
-import "./SafeMath.sol";
+import "./SushiSafeMath.sol";
 
 library SushiswapV2Library {
     using SafeMathSushiswap for uint;

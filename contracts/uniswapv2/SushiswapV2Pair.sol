@@ -1,9 +1,9 @@
 pragma solidity =0.6.12;
 
 import './SushiswapV2ERC20.sol';
-import './libraries/Math.sol';
-import './libraries/UQ112x112.sol';
-import './interfaces/IERC20.sol';
+import './libraries/SushiMath.sol';
+import './libraries/SushiUQ112x112.sol';
+import './interfaces/SushiIERC20.sol';
 import './interfaces/ISushiswapV2Factory.sol';
 import './interfaces/ISushiswapV2Callee.sol';
 
@@ -181,7 +181,7 @@ contract SushiswapV2Pair is SushiswapV2ERC20 {
         require(to != _token0 && to != _token1, 'SushiswapV2: INVALID_TO');
         if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
         if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-        if (data.length > 0) ISushiswapV2Callee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+        if (data.length > 0) ISushiswapV2Callee(to).sushiswapV2Call(msg.sender, amount0Out, amount1Out, data);
         balance0 = IERC20Sushiswap(_token0).balanceOf(address(this));
         balance1 = IERC20Sushiswap(_token1).balanceOf(address(this));
         }
